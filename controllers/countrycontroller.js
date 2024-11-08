@@ -3,6 +3,9 @@ const asyncHandler = require("express-async-handler");
 const REST_COUNTRIES_API = "https://restcountries.com/v3.1";
 const cache = require('../utils/cache');
 
+// to get every country list
+
+
 const getAllCountries =  asyncHandler(async (req, res) => {
   const cachedData = cache.get('allCountries');
   if (cachedData) return res.json(cachedData);
@@ -30,6 +33,10 @@ const getAllCountries =  asyncHandler(async (req, res) => {
   }
 });
 
+
+// to get  country Details using country code
+
+
 const getCountriesCode = asyncHandler(async (req, res) => {
   const { code } = req.params;
   const cacheKey = `country_${code}`;
@@ -45,6 +52,29 @@ const getCountriesCode = asyncHandler(async (req, res) => {
     res.status(404).json({ error: `Country with code ${code} not found` });
   }
 });
+
+
+
+// to get country List using country region
+
+const getCountriesbyregion = asyncHandler(async (req, res) => {
+  const { region } = req.params;
+  const cacheKey = `countries_region_${region}`;
+  const cachedData = cache.get(cacheKey);
+  if (cachedData) return res.json(cachedData);
+
+  try {
+    const response = await axios.get(`${REST_COUNTRIES_API}/region/${region}`);
+    cache.set(cacheKey, response.data, 3600);
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch countries by region" });
+  }
+});
+
+
+// search country  using Name, capital region and timezone
+
 
 const searchCountries = asyncHandler(async (req, res) => {
 
@@ -89,20 +119,7 @@ const searchCountries = asyncHandler(async (req, res) => {
   }
 });
 
-const getCountriesbyregion = asyncHandler(async (req, res) => {
-  const { region } = req.params;
-  const cacheKey = `countries_region_${region}`;
-  const cachedData = cache.get(cacheKey);
-  if (cachedData) return res.json(cachedData);
 
-  try {
-    const response = await axios.get(`${REST_COUNTRIES_API}/region/${region}`);
-    cache.set(cacheKey, response.data, 3600);
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch countries by region" });
-  }
-});
 
 module.exports = {
   getAllCountries,
